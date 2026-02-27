@@ -317,6 +317,62 @@ input:checked+.tog-sl::before{transform:translateX(16px);}
   .chip{font-size:.58rem;padding:1px 3px;}
 }
 
+/* ── APPOINTMENTS MOBILE CARDS ── */
+@media(max-width:680px){
+  /* Esconde a tabela e mostra cards */
+  #atb-table-wrap { display: none !important; }
+  #atb-cards { display: flex !important; flex-direction: column; gap: 10px; padding: 12px; }
+  .appt-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    position: relative;
+  }
+  .appt-card-name {
+    font-weight: 600;
+    font-size: .9rem;
+    color: var(--dark);
+    margin-bottom: 2px;
+  }
+  .appt-card-service {
+    font-size: .8rem;
+    color: var(--mid);
+    margin-bottom: 6px;
+  }
+  .appt-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: .78rem;
+    color: var(--light);
+  }
+  .appt-card-meta span { display: flex; align-items: center; gap: 3px; }
+  .appt-card-phone {
+    font-size: .78rem;
+    color: var(--rose);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .appt-card-actions {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .appt-card-badge { position: absolute; top: 12px; right: 12px; }
+  table { display: none; }
+}
+@media(min-width:681px){
+  #atb-cards { display: none !important; }
+}
+
 /* Mobile 375px */
 @media(max-width:375px){
   .stat-grid{grid-template-columns:repeat(2,1fr);}
@@ -727,12 +783,13 @@ input:checked+.tog-sl::before{transform:translateX(16px);}
           <button class="btn btn-outline" onclick="clearF()">✕ Limpar</button>
         </div>
         <div class="tw">
-          <div class="tscroll">
+          <div class="tscroll" id="atb-table-wrap">
             <table>
               <thead><tr><th>Cliente</th><th>WhatsApp</th><th>Serviço</th><th>Data</th><th>Horário</th><th>Status</th><th>Ações</th></tr></thead>
               <tbody id="atb"><tr><td colspan="7" class="empty">Carregando...</td></tr></tbody>
             </table>
           </div>
+          <div id="atb-cards" style="display:none"></div>
         </div>
       </div>
 
@@ -1140,8 +1197,16 @@ function chMonth(d) {
 function renderTable(list) {
   const data = list!==undefined ? list : appts;
   const tb = document.getElementById('atb');
-  if (!data.length) { tb.innerHTML='<tr><td colspan="7"><div class="empty"><div class="empty-ico">📋</div>Nenhum agendamento encontrado.</div></td></tr>'; return; }
-  tb.innerHTML = [...data].reverse().map(a=>`
+  const cards = document.getElementById('atb-cards');
+  const emptyRow = '<tr><td colspan="7"><div class="empty"><div class="empty-ico">📋</div>Nenhum agendamento encontrado.</div></td></tr>';
+  if (!data.length) {
+    tb.innerHTML = emptyRow;
+    cards.innerHTML = '<div class="empty" style="padding:32px 16px"><div class="empty-ico">📋</div>Nenhum agendamento encontrado.</div>';
+    return;
+  }
+  const reversed = [...data].reverse();
+  // Desktop table
+  tb.innerHTML = reversed.map(a=>`
     <tr>
       <td><strong>${a.client_name}</strong></td>
       <td><a href="https://wa.me/55${a.client_phone.replace(/\D/g,'')}" target="_blank" style="color:var(--rose);text-decoration:none">📱 ${a.client_phone}</a></td>
@@ -1157,6 +1222,25 @@ function renderTable(list) {
         <button class="btn-xs bxr" onclick="delAppt('${a.id}')">🗑️</button>
       </div></td>
     </tr>`).join('');
+  // Mobile cards
+  cards.innerHTML = reversed.map(a=>`
+    <div class="appt-card">
+      <div class="appt-card-badge"><span class="badge b-${a.status}">${sl(a.status)}</span></div>
+      <div class="appt-card-name">${a.client_name}</div>
+      <div class="appt-card-service">✂️ ${a.service}</div>
+      <div class="appt-card-meta">
+        <span>📅 ${fd(a.appointment_date)}</span>
+        <span>⏰ ${a.appointment_time.substring(0,5)}</span>
+      </div>
+      <a class="appt-card-phone" href="https://wa.me/55${a.client_phone.replace(/\D/g,'')}" target="_blank">📱 ${a.client_phone}</a>
+      <div class="appt-card-actions">
+        <button class="btn-xs bxe" onclick="editAppt('${a.id}')">✏️ Editar</button>
+        <button class="btn-xs bxg" onclick="setStatus('${a.id}','completed')">✓ Concluir</button>
+        <button class="btn-xs bxy" onclick="setStatus('${a.id}','no_show')">Faltou</button>
+        <button class="btn-xs bxr" onclick="setStatus('${a.id}','cancelled')">✕ Cancelar</button>
+        <button class="btn-xs bxr" onclick="delAppt('${a.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
 }
 
 function filterAppts() {

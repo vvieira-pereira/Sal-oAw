@@ -1967,31 +1967,30 @@ async function confirmBooking() {
     const price = parseFloat(booking.price || 0).toFixed(2).replace('.', ',');
     const NL = '\n';
 
-    const adminMsg = '\uD83D\uDD14 *Novo Agendamento \u2014 Studio Amanda Neris*' + NL + NL +
-      '\uD83D\uDC64 *Cliente:* ' + booking.name + NL +
-      '\uD83D\uDCF1 *WhatsApp:* ' + booking.phone + NL +
-      (booking.email ? '\uD83D\uDCE7 *E-mail:* ' + booking.email + NL : '') +
+    const adminMsg =
+      '📅 *Novo agendamento recebido*' + NL + NL +
+      '👤 ' + booking.name + NL +
+      '📱 ' + booking.phone + NL +
+      (booking.email ? '📧 ' + booking.email + NL : '') +
       NL +
-      '\u2702\uFE0F *Servi\u00E7o:* ' + booking.service + NL +
-      '\uD83D\uDCC5 *Data:* ' + dateStr + NL +
-      '\u23F0 *Hor\u00E1rio:* ' + booking.time + NL +
-      '\uD83D\uDCB0 *Valor:* R$ ' + price + NL +
-      (booking.notes ? NL + '\uD83D\uDCDD *Observa\u00E7\u00F5es:* ' + booking.notes + NL : '') +
-      NL + '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500' + NL +
-      '_Notifica\u00E7\u00E3o autom\u00E1tica do sistema de agendamento._';
+      '✂️ ' + booking.service + NL +
+      '🗓 ' + dateStr + NL +
+      '⏰ ' + booking.time + NL +
+      '💰 R$ ' + price +
+      (booking.notes ? NL + NL + '📝 ' + booking.notes : '') + NL + NL +
+      '_Studio Amanda Neris_';
 
-    const clientMsg = '\u2705 *Agendamento Confirmado!*' + NL + NL +
-      'Ol\u00E1, *' + booking.name + '*! \uD83C\uDF38' + NL + NL +
-      'Seu agendamento foi realizado com sucesso:' + NL + NL +
-      '\u2702\uFE0F *Servi\u00E7o:* ' + booking.service + NL +
-      '\uD83D\uDCC5 *Data:* ' + dateStr + NL +
-      '\u23F0 *Hor\u00E1rio:* ' + booking.time + NL +
-      '\uD83D\uDCB0 *Valor:* R$ ' + price + NL + NL +
-      '\uD83D\uDCCD *Endere\u00E7o:*' + NL +
-      'R. Profa. Maria Benedita Augusto Keller' + NL +
-      'J\u00FAlio de Mesquita Filho \u2014 Sorocaba/SP' + NL + NL +
-      'Para cancelar ou reagendar, entre em contato com 24h de anteced\u00EAncia.' + NL + NL +
-      'At\u00E9 breve! \uD83D\uDC87\u200D\u2640\uFE0F\u2728' + NL + NL +
+    const clientMsg =
+      'Olá, *' + booking.name + '*! 🌸' + NL + NL +
+      'Seu agendamento foi confirmado com sucesso.' + NL + NL +
+      '✂️ ' + booking.service + NL +
+      '🗓 ' + dateStr + NL +
+      '⏰ ' + booking.time + NL +
+      '💰 R$ ' + price + NL + NL +
+      '📍 R. Profa. Maria Benedita Augusto Keller' + NL +
+      'Júlio de Mesquita Filho — Sorocaba/SP' + NL + NL +
+      'Para cancelar ou reagendar, avise com 24h de antecedência.' + NL + NL +
+      'Até breve! 💇‍♀️✨' + NL +
       '_Studio Amanda Neris_';
 
     window.open('https://wa.me/5515991247287?text=' + encodeURIComponent(adminMsg), '_blank');
