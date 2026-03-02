@@ -2489,6 +2489,11 @@
         else if (i === n) ind.classList.add('active');
       }
       currentStep = n;
+
+      // Auto-scroll para o topo do form
+      if (window.innerWidth <= 768) {
+        document.getElementById('booking').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     function renderSummary() {
