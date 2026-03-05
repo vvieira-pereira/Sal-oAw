@@ -684,41 +684,55 @@
     /* ── CALENDAR ADMIN ── */
     .cal-wrap {
       background: var(--card);
-      border-radius: 10px;
+      border-radius: 12px;
       border: 1px solid var(--border);
       overflow: hidden;
+      box-shadow: 0 2px 16px rgba(42,31,26,.07);
+    }
+
+    /* Desktop: scroll apenas se necessário */
+    .cal-scroll-outer {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .cal-scroll-inner {
+      min-width: 340px;
     }
 
     .cal-head {
-      padding: 16px 20px;
+      padding: 14px 20px;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: var(--card);
     }
 
     .cal-nav-btn {
       border: 1px solid var(--border);
-      background: var(--card);
+      background: transparent;
       cursor: pointer;
-      width: 32px;
-      height: 32px;
-      border-radius: 5px;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
       font-size: 1rem;
       transition: all .2s;
       display: flex;
       align-items: center;
       justify-content: center;
+      color: var(--dark);
     }
 
     .cal-nav-btn:hover {
       border-color: var(--rose);
       color: var(--rose);
+      background: #FFF5F0;
     }
 
     .cal-month-lbl {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       font-weight: 600;
       color: var(--dark);
     }
@@ -731,21 +745,22 @@
     }
 
     .cal-dname {
-      background: #FAF6F3;
+      background: #F8F3EF;
       text-align: center;
-      padding: 9px 4px;
-      font-size: .68rem;
-      letter-spacing: .07em;
+      padding: 8px 2px;
+      font-size: .62rem;
+      letter-spacing: .06em;
       text-transform: uppercase;
       color: var(--light);
-      font-weight: 500;
+      font-weight: 600;
     }
 
     .cal-cell {
       background: var(--card);
-      min-height: 100px;
-      padding: 7px;
+      min-height: 90px;
+      padding: 6px 5px;
       transition: background .15s;
+      cursor: default;
     }
 
     .cal-cell:hover {
@@ -758,14 +773,15 @@
 
     .cal-cell.other {
       background: #F9F5F1;
-      opacity: .5;
+      opacity: .45;
     }
 
     .cal-num {
-      font-size: .86rem;
+      font-size: .8rem;
       color: var(--dark);
       font-weight: 500;
       margin-bottom: 4px;
+      line-height: 1;
     }
 
     .cal-num.today-circle {
@@ -774,18 +790,18 @@
       width: 22px;
       height: 22px;
       border-radius: 50%;
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: .76rem;
+      font-size: .74rem;
     }
 
     .chip {
       background: var(--rose);
       color: #fff;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: .67rem;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: .62rem;
       margin-bottom: 2px;
       white-space: nowrap;
       overflow: hidden;
@@ -793,24 +809,113 @@
       cursor: pointer;
       max-width: 100%;
       display: block;
+      line-height: 1.4;
     }
 
-    .chip.completed {
-      background: var(--info);
-    }
-
-    .chip.cancelled {
-      background: #bbb;
-    }
-
-    .chip.no_show {
-      background: #F57F17;
-    }
+    .chip.completed { background: var(--info); }
+    .chip.cancelled { background: #bbb; }
+    .chip.no_show   { background: #F57F17; }
 
     .cal-more {
-      font-size: .67rem;
+      font-size: .6rem;
+      color: var(--rose);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    /* ── CALENDÁRIO MOBILE: view em lista de dias ── */
+    .cal-mobile {
+      display: none;
+    }
+
+    .cal-mobile-day {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+    }
+
+    .cal-mobile-day:last-child {
+      border-bottom: none;
+    }
+
+    .cal-mobile-day-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .cal-mobile-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #F3EDE9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--dark);
+      flex-shrink: 0;
+    }
+
+    .cal-mobile-num.today-m {
+      background: var(--rose);
+      color: #fff;
+    }
+
+    .cal-mobile-weekday {
+      font-size: .72rem;
       color: var(--light);
-      margin-top: 1px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 500;
+    }
+
+    .cal-mobile-chips {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-left: 38px;
+    }
+
+    .cal-mobile-chip {
+      background: var(--rose);
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: .72rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cal-mobile-chip.completed { background: var(--info); }
+    .cal-mobile-chip.cancelled { background: #bbb; }
+    .cal-mobile-chip.no_show   { background: #F57F17; }
+
+    .cal-mobile-chip-time {
+      font-weight: 600;
+      opacity: .9;
+      white-space: nowrap;
+    }
+
+    .cal-mobile-chip-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cal-mobile-empty {
+      padding-left: 38px;
+      font-size: .7rem;
+      color: var(--light);
+      font-style: italic;
+    }
+
+    @media (max-width: 600px) {
+      .cal-desktop { display: none !important; }
+      .cal-mobile  { display: block !important; }
     }
 
     /* ── HOURS ── */
@@ -1081,16 +1186,28 @@
 
     .gal-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px;
     }
 
+    /* Card: imagem quadrada + legenda abaixo */
     .gthumb {
+      border-radius: 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 2px 10px rgba(42,31,26,.06);
+    }
+
+    /* Wrapper da imagem */
+    .gthumb-img {
       position: relative;
       aspect-ratio: 1;
       overflow: hidden;
-      border-radius: 8px;
       background: var(--border);
+      flex-shrink: 0;
     }
 
     .gthumb img {
@@ -1101,18 +1218,19 @@
       transition: transform .3s;
     }
 
-    .gthumb:hover img {
+    .gthumb:hover .gthumb-img img {
       transform: scale(1.05);
     }
 
+    /* Botões ficam visíveis no hover (desktop) e sempre visíveis no touch */
     .gthumb-ov {
       position: absolute;
       inset: 0;
-      background: rgba(42, 31, 26, .65);
+      background: rgba(42, 31, 26, .6);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
       opacity: 0;
       transition: opacity .2s;
     }
@@ -1121,18 +1239,47 @@
       opacity: 1;
     }
 
+    /* Em touch: barra de ações sempre visível abaixo da imagem */
+    .gthumb-actions {
+      display: none;
+      gap: 8px;
+      padding: 7px 10px;
+      background: #FAF6F3;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .gthumb-actions .btn-xs {
+      flex: 1;
+      justify-content: center;
+      font-size: .7rem;
+      padding: 5px 8px;
+    }
+
+    /* Legenda — caixa com scroll se muito grande */
     .gcap {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(0, 0, 0, .55);
-      color: #fff;
-      font-size: .67rem;
-      padding: 4px 7px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      padding: 8px 10px;
+      font-size: .7rem;
+      color: #6B4F43;
+      line-height: 1.5;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      max-height: 72px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      word-break: break-word;
+      scrollbar-width: thin;
+      scrollbar-color: var(--rose) transparent;
+      flex: 1;
+    }
+
+    .gcap::-webkit-scrollbar { width: 3px; }
+    .gcap::-webkit-scrollbar-track { background: transparent; }
+    .gcap::-webkit-scrollbar-thumb { background: var(--rose); border-radius: 2px; }
+
+    /* Mobile: sempre mostra barra de ações */
+    @media (hover: none) {
+      .gthumb-ov { display: none !important; }
+      .gthumb-actions { display: flex !important; }
     }
 
     .gempty {
@@ -1146,7 +1293,7 @@
     /* ── SERVICES ── */
     .svc-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       gap: 14px;
     }
 
@@ -1155,15 +1302,18 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .svc-img {
-      height: 130px;
+      height: 110px;
       overflow: hidden;
       background: #F0EAE5;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
     }
 
     .svc-img img {
@@ -1173,28 +1323,32 @@
     }
 
     .svc-ph {
-      font-size: 2.8rem;
+      font-size: 2.4rem;
       color: var(--border);
     }
 
     .svc-body {
-      padding: 14px;
+      padding: 12px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
     }
 
     .svc-name {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.08rem;
+      font-size: 1.05rem;
       font-weight: 600;
       color: var(--dark);
-      margin-bottom: 3px;
+      margin-bottom: 4px;
+      line-height: 1.3;
     }
 
     .svc-desc {
-      font-size: .76rem;
+      font-size: .74rem;
       color: var(--light);
       margin-bottom: 8px;
       line-height: 1.5;
-      min-height: 30px;
+      flex: 1;
     }
 
     .svc-foot {
@@ -1207,7 +1361,7 @@
 
     .svc-price {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 600;
       color: var(--rose);
     }
@@ -1220,7 +1374,16 @@
     .svc-acts {
       display: flex;
       gap: 6px;
-      margin-top: 9px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .svc-acts .btn {
+      flex: 1;
+      min-width: 0;
+      justify-content: center;
+      font-size: .72rem;
+      padding: 7px 10px;
     }
 
     .svc-off {
@@ -1620,14 +1783,35 @@
         grid-template-columns: 1fr;
       }
 
-      .cal-cell {
-        min-height: 60px;
-        padding: 3px;
+      .svc-card {
+        flex-direction: row;
+        align-items: stretch;
       }
 
-      .chip {
-        font-size: .6rem;
+      .svc-img {
+        width: 90px;
+        height: auto;
+        flex-shrink: 0;
       }
+
+      .svc-body {
+        padding: 10px 12px;
+      }
+
+      .svc-name {
+        font-size: .95rem;
+      }
+
+      .svc-acts {
+        flex-direction: row;
+      }
+
+      .svc-acts .btn {
+        padding: 6px 8px;
+        font-size: .68rem;
+      }
+
+      /* cal-cell controlado por cal-desktop/cal-mobile */
     }
 
     /* Mobile 420px */
@@ -1674,15 +1858,7 @@
         grid-template-columns: 1fr 1fr !important;
       }
 
-      .cal-cell {
-        min-height: 50px;
-        padding: 2px;
-      }
-
-      .chip {
-        font-size: .58rem;
-        padding: 1px 3px;
-      }
+      /* cal-cell controlado por cal-desktop/cal-mobile */
     }
 
     /* ── APPOINTMENTS MOBILE CARDS ── */
@@ -2346,15 +2522,24 @@
                 <span class="cal-month-lbl" id="calTitle">—</span>
                 <button class="cal-nav-btn" onclick="chMonth(1)">›</button>
               </div>
-              <div class="cal-grid" id="calGrid">
-                <div class="cal-dname">Dom</div>
-                <div class="cal-dname">Seg</div>
-                <div class="cal-dname">Ter</div>
-                <div class="cal-dname">Qua</div>
-                <div class="cal-dname">Qui</div>
-                <div class="cal-dname">Sex</div>
-                <div class="cal-dname">Sáb</div>
+              <!-- Desktop: grid 7 colunas -->
+              <div class="cal-desktop">
+                <div class="cal-scroll-outer">
+                  <div class="cal-scroll-inner">
+                    <div class="cal-grid" id="calGrid">
+                      <div class="cal-dname">Dom</div>
+                      <div class="cal-dname">Seg</div>
+                      <div class="cal-dname">Ter</div>
+                      <div class="cal-dname">Qua</div>
+                      <div class="cal-dname">Qui</div>
+                      <div class="cal-dname">Sex</div>
+                      <div class="cal-dname">Sáb</div>
+                    </div>
+                  </div>
+                </div>
               </div>
+              <!-- Mobile: lista de dias com agendamentos -->
+              <div class="cal-mobile" id="calMobile"></div>
             </div>
           </div>
 
@@ -2964,6 +3149,7 @@
     // ── CALENDAR
     async function renderCal() {
       const ms = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      const wd = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
       document.getElementById('calTitle').textContent = ms[calM] + ' ' + calY;
       const first = new Date(calY, calM, 1).getDay();
       const dim = new Date(calY, calM + 1, 0).getDate();
@@ -2973,13 +3159,12 @@
       const { data: ma } = await db.from('appointments').select('*').gte('appointment_date', sd).lte('appointment_date', ed).order('appointment_time');
       const mp = {}; (ma || []).forEach(a => { if (!mp[a.appointment_date]) mp[a.appointment_date] = []; mp[a.appointment_date].push(a); });
 
+      // ── Desktop grid ──
       const grid = document.getElementById('calGrid');
       const names = Array.from(grid.querySelectorAll('.cal-dname'));
       grid.innerHTML = '';
       names.forEach(n => grid.appendChild(n));
-
       for (let i = 0; i < first; i++) { const c = document.createElement('div'); c.className = 'cal-cell other'; grid.appendChild(c); }
-
       for (let d = 1; d <= dim; d++) {
         const ds = `${calY}-${String(calM + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const isTd = ds === ts;
@@ -3001,6 +3186,37 @@
         if (da.length > 3) { const m = document.createElement('div'); m.className = 'cal-more'; m.textContent = `+${da.length - 3} mais`; cell.appendChild(m); }
         grid.appendChild(cell);
       }
+
+      // ── Mobile lista ──
+      const mob = document.getElementById('calMobile');
+      let mobHtml = '';
+      for (let d = 1; d <= dim; d++) {
+        const ds = `${calY}-${String(calM + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const isTd = ds === ts;
+        const da = mp[ds] || [];
+        const dayOfWeek = new Date(calY, calM, d).getDay();
+        const numCls = isTd ? 'cal-mobile-num today-m' : 'cal-mobile-num';
+        mobHtml += `<div class="cal-mobile-day${isTd ? ' cal-mobile-today' : ''}">`;
+        mobHtml += `<div class="cal-mobile-day-header">`;
+        mobHtml += `<div class="${numCls}">${d}</div>`;
+        mobHtml += `<div class="cal-mobile-weekday">${wd[dayOfWeek]}</div>`;
+        mobHtml += `</div>`;
+        if (da.length) {
+          mobHtml += `<div class="cal-mobile-chips">`;
+          da.forEach(a => {
+            const cls = a.status !== 'scheduled' ? a.status : '';
+            mobHtml += `<div class="cal-mobile-chip ${cls}" onclick="(async()=>{V('appointments');await loadAppts();setTimeout(()=>editAppt('${a.id}'),200);})()">`
+              + `<span class="cal-mobile-chip-time">${a.appointment_time.substring(0,5)}</span>`
+              + `<span class="cal-mobile-chip-name">${a.client_name} · ${a.service}</span>`
+              + `</div>`;
+          });
+          mobHtml += `</div>`;
+        } else {
+          mobHtml += `<div class="cal-mobile-empty">Sem agendamentos</div>`;
+        }
+        mobHtml += `</div>`;
+      }
+      mob.innerHTML = mobHtml;
     }
     function chMonth(d) {
       calM += d; if (calM < 0) { calM = 11; calY--; } if (calM > 11) { calM = 0; calY++; } renderCal();
@@ -3234,15 +3450,16 @@
         return;
       }
       g.innerHTML = data.map(function (p) {
-        var eid = 'photo_' + p.id;
         var capSafe = (p.caption || '').replace(/\\/g, '\\\\').replace(/`/g, '&#96;').replace(/'/g, '&#39;');
+        var editBtn = '<button class="btn-xs" onclick="openEditCap(\'' + p.id + '\',\'' + capSafe + '\')" title="Editar">&#9998; Editar</button>';
+        var delBtn  = '<button class="btn-xs bxr" onclick="delPhoto(\'' + p.id + '\')" title="Excluir">&#128465; Excluir</button>';
         return '<div class="gthumb">'
-          + '<img src="' + p.url + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"/>'
-          + '<div class="gthumb-ov">'
-          + '<button class="btn-xs" onclick="openEditCap(\'' + p.id + '\',\'' + capSafe + '\')" title="Editar descrição">&#9998;</button>'
-          + '<button class="btn-xs bxr" onclick="delPhoto(\'' + p.id + '\')" title="Excluir">&#128465;</button>'
+          + '<div class="gthumb-img">'
+          + '<img src="' + p.url + '" alt="" loading="lazy" onerror="this.closest(\'.gthumb\').style.opacity=\'.4\'"/>'
+          + '<div class="gthumb-ov">' + editBtn + delBtn + '</div>'
           + '</div>'
-          + '<div class="gcap">' + (p.caption || '<em style="opacity:.45;font-size:.7rem">Sem descrição</em>') + '</div>'
+          + '<div class="gthumb-actions">' + editBtn + delBtn + '</div>'
+          + '<div class="gcap">' + (p.caption || '<em style="opacity:.5;font-size:.68rem">Sem descrição</em>') + '</div>'
           + '</div>';
       }).join('');
     }

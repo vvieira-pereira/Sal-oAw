@@ -673,19 +673,23 @@
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
+      gap: 16px;
+      max-width: 960px;
+      margin: 0 auto;
     }
 
     /* Card: image on top, description fixed below */
     .gallery-card {
       background: var(--warm-white);
-      border-radius: 12px;
+      border-radius: 10px;
       overflow: hidden;
       border: 1px solid var(--border);
       box-shadow: 0 4px 20px rgba(42, 31, 26, 0.06);
       transition: transform 0.3s, box-shadow 0.3s;
       display: flex;
       flex-direction: column;
+      max-width: 300px;
+      width: 100%;
     }
 
     .gallery-card:hover {
@@ -700,6 +704,7 @@
       overflow: hidden;
       background: var(--border);
       flex-shrink: 0;
+      cursor: pointer;
     }
 
     .gallery-card-img img {
@@ -716,12 +721,12 @@
 
     /* Fixed description below image — always visible */
     .gallery-card-info {
-      padding: 14px 16px 16px;
+      padding: 10px 12px 12px;
       border-top: 1px solid var(--border);
-      flex: 1;
       display: flex;
+      flex-direction: row;
       align-items: flex-start;
-      gap: 10px;
+      gap: 8px;
     }
 
     .gallery-card-dot {
@@ -729,16 +734,30 @@
       height: 6px;
       background: var(--rose);
       border-radius: 50%;
-      margin-top: 6px;
+      margin-top: 5px;
       flex-shrink: 0;
     }
 
     .gallery-card-caption {
-      font-size: 0.82rem;
+      font-size: 0.80rem;
       color: #6B4F43 !important;
-      line-height: 1.65;
+      line-height: 1.55;
       font-weight: 400;
       font-family: 'DM Sans', sans-serif;
+      width: 100%;
+      max-height: 90px;
+      overflow-y: auto;
+    }
+
+    .gallery-card-caption::-webkit-scrollbar {
+      width: 3px;
+    }
+    .gallery-card-caption::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .gallery-card-caption::-webkit-scrollbar-thumb {
+      background: var(--rose);
+      border-radius: 3px;
     }
 
     /* Rich HTML — cores */
@@ -803,6 +822,78 @@
       border-radius: 50%;
       margin-top: 6px;
     }
+
+    /* ── LIGHTBOX ── */
+    .gallery-lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,0.01);
+      align-items: center;
+      justify-content: center;
+    }
+    .gallery-lightbox.active {
+      display: flex;
+    }
+    .gallery-lightbox-backdrop {
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: rgba(20,12,8,0.72);
+    }
+    .gallery-lightbox-content {
+      position: relative;
+      z-index: 2;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .gallery-lightbox-content img {
+      max-width: 90vw;
+      max-height: 78vh;
+      border-radius: 12px;
+      object-fit: contain;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+    .gallery-lightbox-close {
+      position: absolute;
+      top: -44px;
+      right: 0;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      backdrop-filter: blur(6px);
+    }
+    .gallery-lightbox-close:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    .gallery-lightbox-caption {
+      color: rgba(255,255,255,0.85);
+      font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif;
+      text-align: center;
+      max-width: 560px;
+      max-height: 80px;
+      overflow-y: auto;
+      padding: 0 12px;
+      line-height: 1.5;
+    }
+    .gallery-lightbox-caption::-webkit-scrollbar { width: 3px; }
+    .gallery-lightbox-caption::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
 
     .gallery-placeholder {
       grid-column: 1 / -1;
@@ -1663,9 +1754,14 @@
         gap: 12px;
       }
 
-      .section-sub {
-        font-size: 0.9rem;
+      .gallery-card {
+        max-width: 100%;
       }
+
+      .gallery-lightbox-content img {
+        max-height: 65vh;
+      }
+
     }
 
     /* Mobile geral — 420px */
@@ -2288,7 +2384,7 @@
         }
         grid.innerHTML = data.map((p) => `
       <div class="gallery-card">
-        <div class="gallery-card-img">
+        <div class="gallery-card-img" onclick="openLightbox('${p.url}', ${p.caption ? `\`${p.caption.replace(/`/g, "'")}\`` : 'null'})">
           <img src="${p.url}"
             alt="${p.caption ? p.caption.replace(/"/g, '&quot;') : 'Trabalho Amanda Neris'}"
             loading="lazy"
@@ -2615,7 +2711,33 @@
       const nav = document.getElementById('navbar');
       nav.style.boxShadow = window.scrollY > 50 ? '0 4px 30px rgba(42,31,26,0.08)' : 'none';
     });
+
+    // ── Lightbox
+    function openLightbox(src, caption) {
+      const lb = document.getElementById('galleryLightbox');
+      lb.querySelector('.gallery-lightbox-img').src = src;
+      const cap = lb.querySelector('.gallery-lightbox-caption');
+      cap.innerHTML = caption || '';
+      cap.style.display = caption ? 'block' : 'none';
+      lb.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      document.getElementById('galleryLightbox').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
   </script>
+
+  <!-- Lightbox Modal -->
+  <div class="gallery-lightbox" id="galleryLightbox">
+    <div class="gallery-lightbox-backdrop" onclick="closeLightbox()"></div>
+    <div class="gallery-lightbox-content">
+      <button class="gallery-lightbox-close" onclick="closeLightbox()" aria-label="Fechar">✕</button>
+      <img class="gallery-lightbox-img" src="" alt="Foto ampliada" />
+      <div class="gallery-lightbox-caption"></div>
+    </div>
+  </div>
 </body>
 
 </html>
