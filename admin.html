@@ -1290,7 +1290,84 @@
       grid-column: 1/-1;
     }
 
-    /* ── SERVICES ── */
+
+    /* ── VIDEO HERO MANAGER ── */
+    .vup {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      background: var(--card);
+      margin-bottom: 16px;
+    }
+    .vup:hover { border-color: var(--rose); background: rgba(196,133,106,.04); }
+    .vup-icon { font-size: 2.2rem; margin-bottom: 8px; }
+    .vup-txt { font-weight: 500; font-size: .9rem; color: var(--dark); margin-bottom: 4px; }
+    .vup-sub { font-size: .75rem; color: var(--light); }
+
+    .vid-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .vid-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(42,31,26,.06);
+      display: flex;
+      flex-direction: column;
+      cursor: grab;
+      transition: box-shadow .2s, transform .2s;
+      position: relative;
+    }
+    .vid-card:active { cursor: grabbing; }
+    .vid-card.dragging { opacity: .5; transform: scale(.97); box-shadow: 0 8px 30px rgba(42,31,26,.18); }
+    .vid-card.drag-over { border-color: var(--rose); box-shadow: 0 0 0 2px rgba(196,133,106,.35); }
+    .vid-thumb {
+      position: relative;
+      aspect-ratio: 9/16;
+      background: #1a1210;
+      overflow: hidden;
+    }
+    .vid-thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .vid-thumb-ov {
+      position: absolute; inset: 0;
+      background: rgba(42,31,26,.55);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      opacity: 0; transition: opacity .2s;
+    }
+    .vid-card:hover .vid-thumb-ov { opacity: 1; }
+    .vid-pos {
+      position: absolute; top: 8px; left: 8px;
+      background: rgba(42,31,26,.7); color: var(--cream);
+      font-size: .65rem; font-weight: 600; letter-spacing: .08em;
+      padding: 3px 7px; border-radius: 20px;
+    }
+    .vid-info { padding: 10px 12px; border-top: 1px solid var(--border); }
+    .vid-name {
+      font-size: .75rem; font-weight: 500; color: var(--dark);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
+    }
+    .vid-meta { font-size: .68rem; color: var(--light); }
+    .vid-actions {
+      display: none; gap: 6px; padding: 8px 10px;
+      background: #FAF6F3; border-bottom: 1px solid var(--border);
+    }
+    .vid-actions .btn-xs { flex:1; justify-content:center; font-size:.7rem; }
+    @media (hover: none) {
+      .vid-thumb-ov { display: none !important; }
+      .vid-actions { display: flex !important; }
+    }
+    .vup-item { display:flex; align-items:center; gap:10px; font-size:.8rem; color:var(--dark); }
+    .vup-item-bar { flex:1; height:4px; background:var(--border); border-radius:4px; overflow:hidden; }
+    .vup-item-fill { height:100%; background:var(--rose); border-radius:4px; transition:width .2s; }
+    .vup-item-label { min-width:36px; text-align:right; color:var(--light); font-size:.72rem; }
+
+    /* ── SERVICES ──
     .svc-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -2385,6 +2462,7 @@
           <div class="sb-item" onclick="V('hours')"><span class="sb-icon">🕐</span>Horários</div>
           <div class="sb-item" onclick="V('blocked')"><span class="sb-icon">🚫</span>Dias Bloqueados</div>
           <div class="sb-item" onclick="V('gallery')"><span class="sb-icon">🖼️</span>Galeria</div>
+          <div class="sb-item" onclick="V('videos')"><span class="sb-icon">🎬</span>Vídeos Hero</div>
           <div class="sb-item" onclick="V('services')"><span class="sb-icon">✂️</span>Serviços</div>
           <div class="sb-section">Acesso</div>
           <div class="sb-item" onclick="window.open('index.html','_blank')"><span class="sb-icon">🌐</span>Ver Site
@@ -2706,6 +2784,104 @@
             </div>
           </div>
 
+
+          <!-- VIDEOS HERO -->
+          <div class="view" id="view-videos">
+            <div class="ph">
+              <div>
+                <h1 class="ph-title">Vídeos do <em>Hero</em></h1>
+                <p class="ph-sub">Gerencie o carrossel de vídeos da página principal</p>
+              </div>
+            </div>
+
+            <!-- Upload drop zone -->
+            <div class="vup" id="vupZone" onclick="document.getElementById('vfile').click()">
+              <input type="file" id="vfile" accept="video/*" multiple style="display:none" onchange="handleVideoSelect(this)" />
+              <div class="vup-icon">🎬</div>
+              <div class="vup-txt">Clique para selecionar vídeos</div>
+              <div class="vup-sub">MP4, MOV, WEBM • Máx. 50MB por vídeo • Sem áudio (mudo automaticamente)</div>
+            </div>
+
+            <!-- Upload progress -->
+            <div id="vupProgress" style="display:none; background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:16px;">
+              <div style="font-size:.85rem;font-weight:500;color:var(--dark);margin-bottom:12px;">⏳ Enviando vídeos...</div>
+              <div id="vupProgressList" style="display:flex;flex-direction:column;gap:8px;"></div>
+            </div>
+
+            <!-- Info box -->
+            <div style="background:rgba(196,133,106,.08);border:1px solid rgba(196,133,106,.25);border-radius:8px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px;">
+              <span style="font-size:1.1rem;margin-top:1px;">💡</span>
+              <div style="font-size:.8rem;color:var(--mid);line-height:1.6;">
+                Os vídeos aparecem em <strong>carrossel automático</strong> no lado direito da página inicial, <strong>sem áudio</strong>. Arraste os cards para reordenar. Recomendado: vídeos curtos de 10–30 segundos.
+              </div>
+            </div>
+
+            <!-- SQL Setup (collapsible) -->
+            <details style="margin-bottom:18px;background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+              <summary style="padding:12px 16px;font-size:.82rem;font-weight:500;color:var(--mid);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;">
+                <span>🗄️</span> Setup do banco de dados (clique para ver o SQL)
+              </summary>
+              <div style="padding:0 16px 16px;">
+                <p style="font-size:.78rem;color:var(--light);margin-bottom:8px;">Execute este SQL no <strong>Supabase → SQL Editor</strong> uma única vez para criar a tabela e o bucket:</p>
+                <pre style="background:#f4ede8;border-radius:8px;padding:12px;font-size:.72rem;color:var(--dark);overflow-x:auto;line-height:1.6;white-space:pre-wrap;">-- 1. Criar tabela
+create table if not exists hero_videos (
+  id uuid primary key default gen_random_uuid(),
+  url text not null,
+  storage_path text,
+  description text,
+  position integer default 1,
+  created_at timestamptz default now()
+);
+
+-- 2. Habilitar RLS na tabela
+alter table hero_videos enable row level security;
+
+-- Remover políticas antigas se existirem (evita conflito)
+drop policy if exists "public read" on hero_videos;
+drop policy if exists "auth write" on hero_videos;
+
+create policy "public read" on hero_videos for select using (true);
+create policy "auth write" on hero_videos for all using (auth.role() = 'authenticated');
+
+-- 3. Criar bucket de storage público
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('hero_videos', 'hero_videos', true, 104857600, array['video/mp4','video/mov','video/webm','video/quicktime'])
+on conflict (id) do update set public = true, file_size_limit = 104857600;
+
+-- 4. Políticas do Storage (ESSENCIAL para upload funcionar)
+drop policy if exists "hero_videos public read" on storage.objects;
+drop policy if exists "hero_videos auth upload" on storage.objects;
+drop policy if exists "hero_videos auth update" on storage.objects;
+drop policy if exists "hero_videos auth delete" on storage.objects;
+
+create policy "hero_videos public read"
+  on storage.objects for select
+  using (bucket_id = 'hero_videos');
+
+create policy "hero_videos auth upload"
+  on storage.objects for insert
+  with check (bucket_id = 'hero_videos' and auth.role() = 'authenticated');
+
+create policy "hero_videos auth update"
+  on storage.objects for update
+  using (bucket_id = 'hero_videos' and auth.role() = 'authenticated');
+
+create policy "hero_videos auth delete"
+  on storage.objects for delete
+  using (bucket_id = 'hero_videos' and auth.role() = 'authenticated');
+
+-- 5. Se a tabela já existe, adicione a coluna description
+alter table hero_videos add column if not exists description text;</pre>
+                <button onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent).then(()=>toast('SQL copiado!','ok'))" style="margin-top:8px;background:var(--dark);color:var(--cream);border:none;border-radius:6px;padding:7px 14px;font-size:.75rem;cursor:pointer;">📋 Copiar SQL</button>
+              </div>
+            </details>
+
+            <!-- Videos grid -->
+            <div class="vid-grid" id="vidGrid">
+              <div class="gempty"><div class="empty-ico">🎬</div>Nenhum vídeo ainda.<br>Faça upload acima.</div>
+            </div>
+          </div>
+
           <!-- SERVICES -->
           <div class="view" id="view-services">
             <div class="ph">
@@ -3005,6 +3181,7 @@
       if (v === 'appointments') { loadAppts().then(() => { applyPeriodFilter(); renderTable(); }); }
       if (v === 'hours') renderHours();
       if (v === 'gallery') loadGallery();
+      if (v === 'videos') loadVideos();
       if (v === 'services') loadServices();
       if (v === 'blocked') loadBlocked();
     }
@@ -3670,6 +3847,218 @@
       loadServices(); toast('Excluído.', 'ok');
     }
 
+
+    // ── VIDEO HERO MANAGER
+    let dragSrcIdx = null;
+
+    async function loadVideos() {
+      const g = document.getElementById('vidGrid');
+      g.innerHTML = '<div class="gempty">Carregando vídeos...</div>';
+      try {
+        const { data } = await db.from('hero_videos').select('*').order('position', { ascending: true });
+        if (!data || !data.length) {
+          g.innerHTML = '<div class="gempty"><div class="empty-ico">🎬</div>Nenhum vídeo ainda.<br>Faça upload acima.</div>';
+          return;
+        }
+        renderVideos(data);
+      } catch (e) {
+        g.innerHTML = '<div class="gempty">Erro ao carregar vídeos.</div>';
+      }
+    }
+
+    function renderVideos(videos) {
+      const g = document.getElementById('vidGrid');
+      g.innerHTML = '';
+      videos.forEach((v, i) => {
+        const card = document.createElement('div');
+        card.className = 'vid-card';
+        card.draggable = true;
+        card.dataset.id = v.id;
+        card.dataset.idx = i;
+
+        const fname = v.storage_path ? v.storage_path.split('/').pop() : ('Vídeo ' + (i + 1));
+        const descSafe = (v.description || '').replace(/\\/g, '\\\\').replace(/`/g, '&#96;').replace(/'/g, '&#39;');
+        const capHtml = v.description
+          ? v.description
+          : '<em style="opacity:.5;font-size:.68rem">Sem descrição</em>';
+
+        card.innerHTML = `
+          <div class="vid-actions">
+            <button class="btn-xs bxe" onclick="openEditVideoCap('${v.id}','${descSafe}')">✏️ Editar</button>
+            <button class="btn-xs bxr" onclick="deleteVideo('${v.id}','${v.storage_path || ''}')">🗑️ Excluir</button>
+          </div>
+          <div class="vid-thumb">
+            <video src="${v.url}" muted playsinline preload="metadata"></video>
+            <div class="vid-pos">${String(i + 1).padStart(2, '0')}</div>
+            <div class="vid-thumb-ov">
+              <button class="btn-xs bxe" onclick="openEditVideoCap('${v.id}','${descSafe}')" style="font-size:.72rem;">✏️ Editar</button>
+              <button class="btn-xs bxr" onclick="deleteVideo('${v.id}','${v.storage_path || ''}')" style="font-size:.72rem;">🗑️ Excluir</button>
+            </div>
+          </div>
+          <div class="gcap" style="cursor:pointer;" onclick="openEditVideoCap('${v.id}','${descSafe}')">${capHtml}</div>
+          <div class="vid-info">
+            <div class="vid-meta" style="font-size:.67rem;">Posição ${i + 1} · Arraste para reordenar</div>
+          </div>
+        `;
+
+        // Drag & drop reorder
+        card.addEventListener('dragstart', (e) => {
+          dragSrcIdx = i;
+          card.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        card.addEventListener('dragend', () => card.classList.remove('dragging'));
+        card.addEventListener('dragover', (e) => { e.preventDefault(); card.classList.add('drag-over'); });
+        card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+        card.addEventListener('drop', async (e) => {
+          e.preventDefault();
+          card.classList.remove('drag-over');
+          const targetIdx = parseInt(card.dataset.idx);
+          if (dragSrcIdx === null || dragSrcIdx === targetIdx) return;
+          await reorderVideos(dragSrcIdx, targetIdx);
+          dragSrcIdx = null;
+        });
+
+        g.appendChild(card);
+
+        // Auto-play on hover
+        const vid = card.querySelector('video');
+        card.addEventListener('mouseenter', () => vid.play().catch(() => {}));
+        card.addEventListener('mouseleave', () => { vid.pause(); vid.currentTime = 0; });
+      });
+    }
+
+    // ── Video description editing
+    function openEditVideoCap(id, currentHtml) {
+      document.getElementById('editVideoCapId').value = id;
+      const ed = document.getElementById('editVideoCapEditor');
+      ed.innerHTML = currentHtml.replace(/&#96;/g, '`').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+      document.getElementById('editVideoCapModal').classList.add('open');
+      setTimeout(() => ed.focus(), 100);
+    }
+    function closeEditVideoCap() {
+      document.getElementById('editVideoCapModal').classList.remove('open');
+      document.getElementById('editVideoCapEditor').innerHTML = '';
+    }
+    async function saveEditVideoCap() {
+      const id = document.getElementById('editVideoCapId').value;
+      const ed = document.getElementById('editVideoCapEditor');
+      const capHtml = ed.innerHTML.trim();
+      const res = await db.from('hero_videos').update({ description: capHtml }).eq('id', id);
+      if (!res.error) { closeEditVideoCap(); loadVideos(); toast('Descrição atualizada!', 'ok'); }
+      else toast('Erro ao salvar.', 'err');
+    }
+
+    async function reorderVideos(fromIdx, toIdx) {
+      const g = document.getElementById('vidGrid');
+      const cards = [...g.querySelectorAll('.vid-card')];
+      const ids = cards.map(c => c.dataset.id);
+
+      // Reorder array
+      const moved = ids.splice(fromIdx, 1)[0];
+      ids.splice(toIdx, 0, moved);
+
+      // Update positions in DB
+      const updates = ids.map((id, i) => db.from('hero_videos').update({ position: i + 1 }).eq('id', id));
+      await Promise.all(updates);
+      toast('Ordem atualizada!', 'ok');
+      loadVideos();
+    }
+
+    async function handleVideoSelect(input) {
+      const files = [...input.files];
+      if (!files.length) return;
+
+      const progWrap = document.getElementById('vupProgress');
+      const progList = document.getElementById('vupProgressList');
+      progWrap.style.display = 'block';
+      progList.innerHTML = '';
+
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const row = document.createElement('div');
+        row.className = 'vup-item';
+        row.innerHTML = `<span style="flex:0 0 120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.78rem">${f.name}</span>
+          <div class="vup-item-bar"><div class="vup-item-fill" id="vfill_${i}" style="width:0%"></div></div>
+          <span class="vup-item-label" id="vlabel_${i}">0%</span>`;
+        progList.appendChild(row);
+
+        try {
+          const fill = document.getElementById('vfill_' + i);
+          const label = document.getElementById('vlabel_' + i);
+
+          // Simulate progress for UX while uploading
+          let prog = 0;
+          const ticker = setInterval(() => {
+            prog = Math.min(prog + Math.random() * 15, 85);
+            fill.style.width = prog + '%';
+            label.textContent = Math.floor(prog) + '%';
+          }, 200);
+
+          // Caminho direto na raiz do bucket (sem subpasta duplicada)
+          const nm = Date.now() + '_' + f.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const { error: ue } = await db.storage.from('hero_videos').upload(nm, f, { contentType: f.type, upsert: false });
+          clearInterval(ticker);
+
+          if (ue) {
+            console.error('[upload error]', ue);
+            const errMsg = ue.message || ue.error || JSON.stringify(ue);
+            document.getElementById('vlabel_' + i).textContent = '✗';
+            document.getElementById('vfill_' + i).style.background = '#E53935';
+            toast('Erro upload: ' + errMsg, 'err');
+            continue;
+          }
+          fill.style.width = '100%'; label.textContent = '100%';
+
+          const { data: ud } = db.storage.from('hero_videos').getPublicUrl(nm);
+
+          // Get current max position
+          const { data: existing } = await db.from('hero_videos').select('position').order('position', { ascending: false }).limit(1);
+          const nextPos = (existing && existing.length) ? (existing[0].position + 1) : 1;
+
+          const { error: ie } = await db.from('hero_videos').insert({ url: ud.publicUrl, storage_path: nm, position: nextPos });
+          if (ie) {
+            console.error('[insert error]', ie);
+            toast('Vídeo enviado mas erro ao salvar: ' + (ie.message || ie.code), 'err');
+            continue;
+          }
+          label.textContent = '✓';
+          fill.style.background = '#4CAF50';
+        } catch (err) {
+          console.error('[catch error]', err);
+          document.getElementById('vlabel_' + i).textContent = '✗';
+          document.getElementById('vfill_' + i).style.background = '#E53935';
+          toast('Erro ao enviar: ' + (err.message || err.error || String(err)), 'err');
+        }
+      }
+
+      input.value = '';
+      setTimeout(() => {
+        progWrap.style.display = 'none';
+        progList.innerHTML = '';
+        loadVideos();
+        toast('Vídeos enviados com sucesso!', 'ok');
+      }, 1200);
+    }
+
+    async function deleteVideo(id, storagePath) {
+      if (!confirm('Excluir este vídeo do carrossel?')) return;
+      if (storagePath) {
+        await db.storage.from('hero_videos').remove([storagePath]);
+      }
+      await db.from('hero_videos').delete().eq('id', id);
+      toast('Vídeo excluído.', 'ok');
+      loadVideos();
+    }
+
+    function previewVideo(url) {
+      const mo = document.createElement('div');
+      mo.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;';
+      mo.innerHTML = `<div style="position:relative;max-width:400px;width:90%;"><video src="${url}" controls autoplay muted playsinline style="width:100%;border-radius:10px;display:block;"></video><button onclick="this.closest('div').parentNode.remove()" style="position:absolute;top:-14px;right:-14px;background:var(--rose);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button></div>`;
+      mo.addEventListener('click', (e) => { if (e.target === mo) mo.remove(); });
+      document.body.appendChild(mo);
+    }
+
     // ── HELPERS
     function fd(s) { const d = new Date(s + 'T12:00:00'); return d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }); }
     function sl(s) { return { confirmed: 'Confirmado', completed: 'Concluído', cancelled: 'Cancelado', no_show: 'Não compareceu' }[s] || s; }
@@ -3847,6 +4236,27 @@
     }
 
   </script>
+
+  <!-- ── EDIT VIDEO DESCRIPTION MODAL ── -->
+  <div class="mo" id="editVideoCapModal">
+    <div class="md" style="width:560px;">
+      <div class="md-title">🎬 Editar Descrição do Vídeo</div>
+      <input type="hidden" id="editVideoCapId" />
+      <div class="rte-wrap">
+        <div class="rte-toolbar">
+          <button type="button" class="rte-btn" title="Negrito" onclick="rteCmd('editVideoCapEditor','bold')"><b style="font-size:.9rem">B</b></button>
+          <button type="button" class="rte-btn" title="Itálico" onclick="rteCmd('editVideoCapEditor','italic')"><i style="font-size:.9rem">I</i></button>
+          <button type="button" class="rte-btn" title="Sublinhado" onclick="rteCmd('editVideoCapEditor','underline')"><u style="font-size:.9rem">U</u></button>
+        </div>
+      </div>
+      <div class="rte-body" id="editVideoCapEditor" contenteditable="true" data-placeholder="Digite a descrição do vídeo... (aparecerá sobre o vídeo no hero da página inicial)"></div>
+      <div class="rte-hint">Esta descrição aparece sobre o vídeo na página principal</div>
+    </div>
+    <div class="m-acts" style="margin-top:16px;">
+      <button class="btn" onclick="closeEditVideoCap()">Cancelar</button>
+      <button class="btn btn-dark" onclick="saveEditVideoCap()">💾 Salvar Descrição</button>
+    </div>
+  </div>
 
   <!-- ── EDIT CAPTION MODAL ── -->
   <div class="mo" id="editCapModal">
