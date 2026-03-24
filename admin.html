@@ -2419,7 +2419,30 @@
         opacity: .4;
       }
     }
-  </style>
+  
+    /* ── Google Calendar events in admin ── */
+    .gcal-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #E8F0FE; color: #1967D2;
+      border-radius: 20px; padding: 2px 8px;
+      font-size: .67rem; font-weight: 600;
+    }
+    .gcal-badge-allday {
+      background: #FCE8E6; color: #C5221F;
+    }
+    .chip.gcal-chip {
+      background: #E8F0FE; color: #1967D2; border: 1px solid #C5D9FB;
+      font-style: italic;
+    }
+    .appt-card.gcal-card {
+      border-left: 3px solid #1967D2;
+      background: #F8FAFF;
+    }
+    tr.gcal-row td { background: #F8FAFF !important; }
+    tr.gcal-row td:first-child::before {
+      content: '📅 ';
+    }
+</style>
 </head>
 
 <body>
@@ -3241,9 +3264,76 @@ alter table hero_videos add column if not exists description text;</pre>
     }
 
     // ── DATA
+    // ── Google Calendar Config
+    const GCAL_API_KEY = 'AIzaSyCMO5EolVcYztCeq_-Z2x8Qvqc3p4e5KiA';
+    const GCAL_CALENDAR_ID = 'amandaneriis2208@gmail.com';
+    let gcalEvents = []; // eventos brutos do Google Calendar
+
+    async function fetchGcalEvents(year, month) {
+      try {
+        const start = new Date(year, month, 1).toISOString();
+        const end   = new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+        const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(GCAL_CALENDAR_ID)}/events?key=${GCAL_API_KEY}&timeMin=${start}&timeMax=${end}&singleEvents=true&orderBy=startTime&maxResults=250`;
+        const res = await fetch(url);
+        if (!res.ok) return [];
+        const data = await res.json();
+        return (data.items || []).filter(ev => ev.status !== 'cancelled');
+      } catch(e) { console.warn('GCal fetch error', e); return []; }
+    }
+
+    // Converte evento do Google Calendar em formato de agendamento do sistema
+    function gcalToAppt(ev) {
+      let dateStr = '', timeStr = '00:00:00', isAllDay = false;
+      if (ev.start && ev.start.dateTime) {
+        const dt = new Date(ev.start.dateTime);
+        dateStr  = dt.toISOString().substring(0, 10);
+        const hh = String(dt.getHours()).padStart(2, '0');
+        const mm = String(dt.getMinutes()).padStart(2, '0');
+        timeStr  = `${hh}:${mm}:00`;
+      } else if (ev.start && ev.start.date) {
+        dateStr  = ev.start.date;
+        isAllDay = true;
+      }
+      return {
+        id: 'gcal_' + ev.id,
+        client_name: ev.summary || 'Evento Google',
+        client_phone: '',
+        service: isAllDay ? '📅 Dia bloqueado (Google Agenda)' : (ev.description || ev.location || '📅 Google Agenda'),
+        appointment_date: dateStr,
+        appointment_time: timeStr,
+        status: 'confirmed',
+        _gcal: true,
+        _allDay: isAllDay,
+        _gcalEvent: ev
+      };
+    }
+
     async function loadAppts() {
       const { data } = await db.from('appointments').select('*').order('appointment_date').order('appointment_time');
-      appts = data || [];
+      const supaAppts = data || [];
+
+      // Buscar eventos do Google Calendar do mês atual e próximo
+      const now = new Date();
+      const thisMonth = await fetchGcalEvents(now.getFullYear(), now.getMonth());
+      const nextMonth = await fetchGcalEvents(now.getFullYear(), now.getMonth() + 1);
+      gcalEvents = [...thisMonth, ...nextMonth];
+
+      // Converter eventos do GCal e mesclar com supabase
+      // Não duplicar: só adiciona evento do GCal se não há agendamento no mesmo dia+hora
+      const supaKeys = new Set(supaAppts.map(a => a.appointment_date?.substring(0,10) + '_' + (a.appointment_time||'').substring(0,5)));
+      const gcalAppts = gcalEvents
+        .map(gcalToAppt)
+        .filter(g => {
+          if (g._allDay) return true; // dia inteiro sempre aparece
+          const key = g.appointment_date + '_' + g.appointment_time.substring(0,5);
+          return !supaKeys.has(key); // não duplica horário já agendado pelo site
+        });
+
+      appts = [...supaAppts, ...gcalAppts].sort((a, b) => {
+        const da = (a.appointment_date||'') + (a.appointment_time||'');
+        const db2 = (b.appointment_date||'') + (b.appointment_time||'');
+        return da.localeCompare(db2);
+      });
     }
     async function loadWH() {
       const { data } = await db.from('working_hours').select('*');
@@ -3320,7 +3410,17 @@ alter table hero_videos add column if not exists description text;</pre>
       const rows = appts.filter(a => a.appointment_date >= t && a.status !== 'cancelled').slice(0, 10);
       const tb = document.getElementById('dnt');
       if (!rows.length) { tb.innerHTML = '<tr><td colspan="5" class="empty">Nenhum agendamento próximo</td></tr>'; return; }
-      tb.innerHTML = rows.map(a => `<tr><td><strong>${a.client_name}</strong></td><td>${a.service}</td><td>${fd(a.appointment_date)}</td><td>${a.appointment_time.substring(0, 5)}</td><td><span class="badge b-${a.status}">${sl(a.status)}</span></td></tr>`).join('');
+      tb.innerHTML = rows.map(a => {
+        const isGcal = !!a._gcal;
+        const gcalTag = isGcal ? '<span class="gcal-badge" style="margin-right:4px">📅</span>' : '';
+        return `<tr class="${isGcal ? 'gcal-row' : ''}">
+          <td>${gcalTag}<strong>${a.client_name}</strong></td>
+          <td>${a.service}</td>
+          <td>${fd(a.appointment_date)}</td>
+          <td>${(a.appointment_time||'').substring(0,5)}</td>
+          <td><span class="badge b-${a.status}">${sl(a.status)}</span></td>
+        </tr>`;
+      }).join('');
     }
 
     // ── CALENDAR
@@ -3334,7 +3434,17 @@ alter table hero_videos add column if not exists description text;</pre>
       const sd = `${calY}-${String(calM + 1).padStart(2, '0')}-01`;
       const ed = `${calY}-${String(calM + 1).padStart(2, '0')}-${String(dim).padStart(2, '0')}`;
       const { data: ma } = await db.from('appointments').select('*').gte('appointment_date', sd).lte('appointment_date', ed).order('appointment_time');
-      const mp = {}; (ma || []).forEach(a => { if (!mp[a.appointment_date]) mp[a.appointment_date] = []; mp[a.appointment_date].push(a); });
+      // Buscar eventos do Google Calendar para o mês da agenda
+      const gcalForMonth = await fetchGcalEvents(calY, calM);
+      const gcalApptsCal = gcalForMonth.map(gcalToAppt);
+
+      const mp = {};
+      // Adicionar agendamentos do Supabase
+      (ma || []).forEach(a => { if (!mp[a.appointment_date]) mp[a.appointment_date] = []; mp[a.appointment_date].push(a); });
+      // Adicionar eventos do Google Calendar
+      gcalApptsCal.forEach(a => { if (!mp[a.appointment_date]) mp[a.appointment_date] = []; mp[a.appointment_date].push(a); });
+      // Ordenar por horário em cada dia
+      Object.keys(mp).forEach(d => mp[d].sort((a,b) => (a.appointment_time||'').localeCompare(b.appointment_time||'')));
 
       // ── Desktop grid ──
       const grid = document.getElementById('calGrid');
@@ -3354,10 +3464,18 @@ alter table hero_videos add column if not exists description text;</pre>
         cell.appendChild(num);
         da.slice(0, 3).forEach(a => {
           const ch = document.createElement('div');
-          ch.className = `chip ${a.status}`;
-          ch.textContent = `${a.appointment_time.substring(0, 5)} ${a.client_name.split(' ')[0]}`;
-          ch.title = `${a.client_name} — ${a.service}`;
-          ch.onclick = async () => { V('appointments'); await loadAppts(); setTimeout(() => editAppt(a.id), 200); };
+          const isGcal = !!a._gcal;
+          ch.className = `chip ${a.status}${isGcal ? ' gcal-chip' : ''}`;
+          const label = isGcal
+            ? (a._allDay ? `📅 ${a.client_name}` : `${(a.appointment_time||'').substring(0,5)} 📅 ${a.client_name.split(' ')[0]}`)
+            : `${(a.appointment_time||'').substring(0,5)} ${a.client_name.split(' ')[0]}`;
+          ch.textContent = label;
+          ch.title = isGcal ? `Google Agenda: ${a.client_name} — ${a.service}` : `${a.client_name} — ${a.service}`;
+          if (isGcal) {
+            ch.onclick = () => window.open('https://calendar.google.com', '_blank');
+          } else {
+            ch.onclick = async () => { V('appointments'); await loadAppts(); setTimeout(() => editAppt(a.id), 200); };
+          }
           cell.appendChild(ch);
         });
         if (da.length > 3) { const m = document.createElement('div'); m.className = 'cal-more'; m.textContent = `+${da.length - 3} mais`; cell.appendChild(m); }
@@ -3381,10 +3499,15 @@ alter table hero_videos add column if not exists description text;</pre>
         if (da.length) {
           mobHtml += `<div class="cal-mobile-chips">`;
           da.forEach(a => {
-            const cls = a.status !== 'scheduled' ? a.status : '';
-            mobHtml += `<div class="cal-mobile-chip ${cls}" onclick="(async()=>{V('appointments');await loadAppts();setTimeout(()=>editAppt('${a.id}'),200);})()">`
-              + `<span class="cal-mobile-chip-time">${a.appointment_time.substring(0,5)}</span>`
-              + `<span class="cal-mobile-chip-name">${a.client_name} · ${a.service}</span>`
+            const isGcal = !!a._gcal;
+            const cls = (a.status !== 'scheduled' ? a.status : '') + (isGcal ? ' gcal-chip' : '');
+            const timeLabel = a._allDay ? '📅' : (a.appointment_time||'').substring(0,5);
+            const clickFn = isGcal
+              ? `window.open('https://calendar.google.com','_blank')`
+              : `(async()=>{V('appointments');await loadAppts();setTimeout(()=>editAppt('${a.id}'),200);})()`;
+            mobHtml += `<div class="cal-mobile-chip ${cls}" onclick="${clickFn}">`
+              + `<span class="cal-mobile-chip-time">${timeLabel}</span>`
+              + `<span class="cal-mobile-chip-name">${isGcal ? '📅 ' : ''}${a.client_name} · ${a.service}</span>`
               + `</div>`;
           });
           mobHtml += `</div>`;
@@ -3411,42 +3534,58 @@ alter table hero_videos add column if not exists description text;</pre>
         return;
       }
       const reversed = [...data].reverse();
+
+      function rowHtml(a) {
+        const isGcal = !!a._gcal;
+        const gcalBadge = isGcal ? `<span class="gcal-badge${a._allDay ? ' gcal-badge-allday' : ''}">📅 Google Agenda</span> ` : '';
+        const phoneCell = isGcal ? '<span style="color:var(--light);font-size:.8rem">—</span>'
+          : `<a href="https://wa.me/55${(a.client_phone||'').replace(/\D/g,'')}" target="_blank" style="color:var(--rose);text-decoration:none">📱 ${a.client_phone}</a>`;
+        const actions = isGcal
+          ? `<a href="https://calendar.google.com" target="_blank" class="btn-xs bxe" style="text-decoration:none">🔗 Ver no Google</a>`
+          : `<button class="btn-xs bxe" onclick="editAppt('${a.id}')">✏️ Editar</button>
+             <button class="btn-xs bxg" onclick="setStatus('${a.id}','completed')">✓ Concluir</button>
+             <button class="btn-xs bxy" onclick="setStatus('${a.id}','no_show')">Faltou</button>
+             <button class="btn-xs bxr" onclick="setStatus('${a.id}','cancelled')">✕ Cancelar</button>
+             <button class="btn-xs bxr" onclick="delAppt('${a.id}')">🗑️</button>`;
+        return `<tr class="${isGcal ? 'gcal-row' : ''}">
+          <td>${gcalBadge}<strong>${a.client_name}</strong></td>
+          <td>${phoneCell}</td>
+          <td>${a.service}</td>
+          <td>${fd(a.appointment_date)}</td>
+          <td><strong>${(a.appointment_time||'').substring(0,5)}</strong></td>
+          <td><span class="badge b-${a.status}">${sl(a.status)}</span></td>
+          <td><div class="acts">${actions}</div></td>
+        </tr>`;
+      }
+
+      function cardHtml(a) {
+        const isGcal = !!a._gcal;
+        const gcalBadge = isGcal ? `<span class="gcal-badge${a._allDay ? ' gcal-badge-allday' : ''}">📅 Google Agenda</span>` : '';
+        const phoneEl = isGcal ? '' : `<a class="appt-card-phone" href="https://wa.me/55${(a.client_phone||'').replace(/\D/g,'')}" target="_blank">📱 ${a.client_phone}</a>`;
+        const actions = isGcal
+          ? `<a href="https://calendar.google.com" target="_blank" class="btn-xs bxe" style="text-decoration:none;display:inline-flex;align-items:center;">🔗 Abrir Google Agenda</a>`
+          : `<button class="btn-xs bxe" onclick="editAppt('${a.id}')">✏️ Editar</button>
+             <button class="btn-xs bxg" onclick="setStatus('${a.id}','completed')">✓ Concluir</button>
+             <button class="btn-xs bxy" onclick="setStatus('${a.id}','no_show')">Faltou</button>
+             <button class="btn-xs bxr" onclick="setStatus('${a.id}','cancelled')">✕ Cancelar</button>
+             <button class="btn-xs bxr" onclick="delAppt('${a.id}')">🗑️</button>`;
+        return `<div class="appt-card${isGcal ? ' gcal-card' : ''}">
+          <div class="appt-card-badge">${gcalBadge}<span class="badge b-${a.status}">${sl(a.status)}</span></div>
+          <div class="appt-card-name">${a.client_name}</div>
+          <div class="appt-card-service">${isGcal ? '📅' : '✂️'} ${a.service}</div>
+          <div class="appt-card-meta">
+            <span>📅 ${fd(a.appointment_date)}</span>
+            <span>⏰ ${(a.appointment_time||'').substring(0,5)}</span>
+          </div>
+          ${phoneEl}
+          <div class="appt-card-actions">${actions}</div>
+        </div>`;
+      }
+
       // Desktop table
-      tb.innerHTML = reversed.map(a => `
-    <tr>
-      <td><strong>${a.client_name}</strong></td>
-      <td><a href="https://wa.me/55${a.client_phone.replace(/\D/g, '')}" target="_blank" style="color:var(--rose);text-decoration:none">📱 ${a.client_phone}</a></td>
-      <td>${a.service}</td>
-      <td>${fd(a.appointment_date)}</td>
-      <td><strong>${a.appointment_time.substring(0, 5)}</strong></td>
-      <td><span class="badge b-${a.status}">${sl(a.status)}</span></td>
-      <td><div class="acts">
-        <button class="btn-xs bxe" onclick="editAppt('${a.id}')">✏️ Editar</button>
-        <button class="btn-xs bxg" onclick="setStatus('${a.id}','completed')">✓ Concluir</button>
-        <button class="btn-xs bxy" onclick="setStatus('${a.id}','no_show')">Faltou</button>
-        <button class="btn-xs bxr" onclick="setStatus('${a.id}','cancelled')">✕ Cancelar</button>
-        <button class="btn-xs bxr" onclick="delAppt('${a.id}')">🗑️</button>
-      </div></td>
-    </tr>`).join('');
+      tb.innerHTML = reversed.map(rowHtml).join('');
       // Mobile cards
-      cards.innerHTML = reversed.map(a => `
-    <div class="appt-card">
-      <div class="appt-card-badge"><span class="badge b-${a.status}">${sl(a.status)}</span></div>
-      <div class="appt-card-name">${a.client_name}</div>
-      <div class="appt-card-service">✂️ ${a.service}</div>
-      <div class="appt-card-meta">
-        <span>📅 ${fd(a.appointment_date)}</span>
-        <span>⏰ ${a.appointment_time.substring(0, 5)}</span>
-      </div>
-      <a class="appt-card-phone" href="https://wa.me/55${a.client_phone.replace(/\D/g, '')}" target="_blank">📱 ${a.client_phone}</a>
-      <div class="appt-card-actions">
-        <button class="btn-xs bxe" onclick="editAppt('${a.id}')">✏️ Editar</button>
-        <button class="btn-xs bxg" onclick="setStatus('${a.id}','completed')">✓ Concluir</button>
-        <button class="btn-xs bxy" onclick="setStatus('${a.id}','no_show')">Faltou</button>
-        <button class="btn-xs bxr" onclick="setStatus('${a.id}','cancelled')">✕ Cancelar</button>
-        <button class="btn-xs bxr" onclick="delAppt('${a.id}')">🗑️</button>
-      </div>
-    </div>`).join('');
+      cards.innerHTML = reversed.map(cardHtml).join('');
     }
 
     function filterAppts() {
